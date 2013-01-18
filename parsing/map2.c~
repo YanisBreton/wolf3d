@@ -1,0 +1,85 @@
+/*
+** map.c for wolf3D in /home/lecler_i/epitech/c/projets/wolf3d/parsing
+**
+** Made by lecler_i
+** Login   <lecler_i@epitech.net>
+**
+** Started on  Sun Dec 16 21:02:38 2012 lecler_i
+** Last update Sun Jan 13 19:55:28 2013 lecler_i
+*/
+
+#include "../wolf.h"
+
+t_block		*generate_block(char *str, int y, int x, t_infos *infos)
+{
+  t_block	*blck;
+  int		i;
+  int		cnt;
+
+  blck = xmalloc(sizeof(*blck));
+  blck->str = my_strdup(str);
+  fill_block(blck, y, x, infos);
+  i = 14;
+  while (blck->str[i] != ',')
+    i++;
+  blck->str[i] = '\0';
+  blck->y_tp = my_getnbr(&blck->str[14]);
+  i = i + 1;
+  cnt = i;
+  while (blck->str[i] != ',')
+    i++;
+  blck->str[i] = '\0';
+  blck->x_tp = my_getnbr(&blck->str[cnt]);
+  i = i + 1;
+  cnt = i;
+  while (blck->str[i] != ';')
+    i++;
+  blck->str[i] = '\0';
+  blck->angle_tp = my_getnbr(&blck->str[cnt]);
+  return (blck);
+}
+
+t_block		***create_tab(t_map *map, char *path, t_infos *infos, int fd)
+{
+  t_block	***blck;
+  char		**tab;
+  char		*s;
+  int		x;
+  int		y;
+
+  map->h = my_cnt_lines(path);
+  blck = xmalloc(sizeof(blck) * (map->h + 1));
+  y = 0;
+  while (s = get_next_line(fd))
+    {
+      blck[y] = xmalloc(sizeof(*blck) * (map->w = my_cnt_words(s)) + 1);
+      tab = my_str_to_wordtab(s);
+      free(s);
+      x = 0;
+      while (tab[x])
+	{
+	  blck[y][x] = generate_block(tab[x], y, x, infos);
+	  x++;
+	}
+      free(tab);
+      blck[y][x] = NULL;
+      y++;
+    }
+  blck[y] = NULL;
+  return (blck);
+}
+
+t_map		*pars_map(char *path, t_infos *infos)
+{
+  t_map		*map;
+  int		fd;
+
+  my_printf("Chargement de la map \"%s\"...   ", path);
+  map = xmalloc(sizeof(t_map));
+  map->path = my_strdup(path);
+  fd = open_map(path);
+  map->tab = create_tab(map, path, infos, fd);
+  close(fd);
+  my_printf("DONE\n");  
+  return (map);
+}

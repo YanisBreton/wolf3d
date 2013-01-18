@@ -1,0 +1,84 @@
+/*
+** map.c for wolf3D in /home/lecler_i/epitech/c/projets/wolf3d/parsing
+**
+** Made by lecler_i
+** Login   <lecler_i@epitech.net>
+**
+** Started on  Sun Dec 16 21:02:38 2012 lecler_i
+** Last update Sun Jan 13 19:55:50 2013 lecler_i
+*/
+
+#include "../wolf.h"
+
+int		open_map(char *path)
+{
+  int		fd;
+  int		path_len;
+
+  path_len = my_strlen(path);
+  if (my_strcmp(".wlf", &path[path_len - 4]))
+    {
+      my_printf("Error : file is not a map file (must be .wlf extension).\n", path);
+      exit(1);
+    }
+  fd = open(path, O_RDONLY);
+  if (fd == -1)
+    {
+      my_printf("Error : can't acces to \"%s\" map file.\n", path);
+      exit(1);
+    }
+  return (fd);
+}
+
+int		my_cnt_lines(char *path)
+{
+  int		i;
+  char		*s;
+  int		fd;
+
+  fd = open(path, O_RDONLY);
+  if (fd == -1)
+    {
+      my_printf("Error : unable to open \"%s\" file.\n", path);
+      exit(1);
+    }
+  i = 0;
+  while (s = get_next_line(fd))
+    {
+      free(s);
+      i++;
+    }
+  close(fd);
+  return (i);
+}
+
+t_texture	*find_texture(t_texture *texture, char alias, t_texture *def)
+{
+  if (alias == '0')
+    return (def);
+  while (texture)
+    {
+      if (texture->alias == alias)
+	return (texture);
+      texture = texture->next;
+    }
+  return (def);
+}
+
+t_block		fill_block(t_block *blck, int y, int x, t_infos *infos)
+{
+  t_texture	*textures;
+
+  textures = infos->texture;
+  blck->y = y * B_SIZE;
+  blck->x = x * B_SIZE;
+  blck->wall = blck->str[0];
+  blck->texture[0] = find_texture(textures, blck->str[4], textures);
+  blck->texture[1] = find_texture(textures, blck->str[5], textures);
+  blck->texture[2] = find_texture(textures, blck->str[6], textures);
+  blck->texture[3] = find_texture(textures, blck->str[7], textures);
+  blck->mask[0] = find_texture(textures, blck->str[9], NULL);
+  blck->mask[1] = find_texture(textures, blck->str[10], NULL);
+  blck->mask[2] = find_texture(textures, blck->str[11], NULL);
+  blck->mask[3] = find_texture(textures, blck->str[12], NULL);
+}
